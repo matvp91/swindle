@@ -1,5 +1,5 @@
 import { rule, not } from 'graphql-shield';
-import * as jwt from 'jsonwebtoken';
+import { unpackToken } from 'token';
 import { Request } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { AppContext } from 'types';
@@ -7,27 +7,21 @@ import { AppContext } from 'types';
 export { and } from 'graphql-shield';
 
 export async function getUserForReq(req: Request, prisma: PrismaClient) {
-  const authorizationHeader = req.headers.authorization;
-  if (!authorizationHeader) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
     return null;
   }
 
-  let user = null;
-
   try {
-    const data = jwt.verify(authorizationHeader, process.env.PRIVATE_KEY);
-    if (!(data instanceof Object)) {
-      return null;
-    }
-
-    user = await prisma.user.findFirst({
+    const data = unpackToken(authHeader);
+    return await prisma.user.findFirst({
       where: {
         id: Number(data.iss),
       },
     });
-  } catch {}
-
-  return user;
+  } catch {
+    return null;
+  }
 }
 
 export const isAuthed = rule()((parent: any, args: {}, context: AppContext) => {

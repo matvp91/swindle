@@ -1,53 +1,29 @@
-import * as jwt from 'jsonwebtoken';
 import { AppContext, ControllerDef, UnusedArg } from 'types';
 import { isGuest } from 'permissions';
-import {
-  Session,
-  User,
-  UserRole,
-  MutationCreateUserArgs,
-  MutationCreateSessionArgs,
-} from 'generated/graphql';
+import { createToken } from 'token';
+import { Session, MutationCreateSessionArgs } from 'generated/graphql';
 
 export const authController: ControllerDef = {
   resolvers: {
     Mutation: {
+      /**
+       * Creates a token for a given email and password,
+       * may then be provided by the Authorization header.
+       */
       createSession: async (
         parent: UnusedArg,
-        args: MutationCreateUserArgs,
+        args: MutationCreateSessionArgs,
         context: AppContext
       ): Promise<Session> => {
         const user = await context.prisma.user.findFirst({
           where: args,
         });
-
         if (!user) {
           throw new Error('Invalid credentials');
         }
 
-        const token = jwt.sign(
-          {
-            iss: user.id,
-          },
-          process.env.PRIVATE_KEY
-        );
-
         return {
-          token,
-        };
-      },
-      createUser: async (
-        parent: UnusedArg,
-        args: MutationCreateSessionArgs,
-        context: AppContext
-      ): Promise<User> => {
-        const user = await context.prisma.user.create({
-          data: args,
-        });
-        return {
-          id: user.id.toString(),
-          email: user.email,
-          role: user.role as UserRole,
+          token: createToken(user.id.toString()),
         };
       },
     },
@@ -55,7 +31,6 @@ export const authController: ControllerDef = {
   permissions: {
     Mutation: {
       createSession: isGuest,
-      createUser: isGuest,
     },
   },
 };
