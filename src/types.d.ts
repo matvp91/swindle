@@ -18,4 +18,4 @@ export interface ControllerDef {
   permissions: any;
 }
 
-export type Parent = any;
+export type UnusedArg = any;

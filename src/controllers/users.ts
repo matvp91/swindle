@@ -1,13 +1,12 @@
-import { AppContext, Parent, ControllerDef } from 'types';
-import * as permissions from 'permissions';
+import { AppContext, UnusedArg, ControllerDef } from 'types';
+import { isAuthed, isRole, and } from 'permissions';
 import { User, UserRole } from 'generated/graphql';
-import { and } from 'graphql-shield';
 
 export const usersController: ControllerDef = {
   resolvers: {
     Query: {
       users: async (
-        _: Parent,
+        parent: UnusedArg,
         args: {},
         context: AppContext
       ): Promise<User[]> => {
@@ -22,7 +21,7 @@ export const usersController: ControllerDef = {
   },
   permissions: {
     Query: {
-      users: and(permissions.isAuthed, permissions.isRole(UserRole.Admin)),
+      users: and(isAuthed, isRole(UserRole.Admin)),
     },
   },
 };

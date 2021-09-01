@@ -4,6 +4,8 @@ import { Request } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { AppContext } from 'types';
 
+export { and } from 'graphql-shield';
+
 export async function getUserForReq(req: Request, prisma: PrismaClient) {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {

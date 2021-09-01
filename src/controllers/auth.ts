@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
-import { AppContext, ControllerDef, Parent } from 'types';
-import * as permissions from 'permissions';
+import { AppContext, ControllerDef, UnusedArg } from 'types';
+import { isGuest } from 'permissions';
 import {
   Session,
   User,
@@ -13,19 +13,16 @@ export const authController: ControllerDef = {
   resolvers: {
     Mutation: {
       createSession: async (
-        _: Parent,
+        parent: UnusedArg,
         args: MutationCreateUserArgs,
         context: AppContext
       ): Promise<Session> => {
         const user = await context.prisma.user.findFirst({
-          where: {
-            email: args.email,
-            password: args.password,
-          },
+          where: args,
         });
 
         if (!user) {
-          throw new Error('Invalid credentials.');
+          throw new Error('Invalid credentials');
         }
 
         const token = jwt.sign(
@@ -40,15 +37,12 @@ export const authController: ControllerDef = {
         };
       },
       createUser: async (
-        _: Parent,
+        parent: UnusedArg,
         args: MutationCreateSessionArgs,
         context: AppContext
       ): Promise<User> => {
         const user = await context.prisma.user.create({
-          data: {
-            email: args.email,
-            password: args.password,
-          },
+          data: args,
         });
         return {
           id: user.id.toString(),
@@ -60,8 +54,8 @@ export const authController: ControllerDef = {
   },
   permissions: {
     Mutation: {
-      createSession: permissions.isGuest,
-      createUser: permissions.isGuest,
+      createSession: isGuest,
+      createUser: isGuest,
     },
   },
 };
