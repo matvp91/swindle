@@ -1,0 +1,23 @@
+type Session {
+  token: String!
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+type User {
+  id: ID!
+  email: String!
+  role: UserRole!
+}
+
+type Query {
+  users: [User]
+}
+
+type Mutation {
+  createSession(email: String!, password: String!): Session
+  createUser(email: String!, password: String!): User
+}
